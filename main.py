@@ -214,12 +214,12 @@ def radio():
 #3
 
 
-def stft(signal, window, fm):
+def stft(signal, window, fm, overlap):
     fftRst = []
     k = 0
     while k < (len(signal) - len(window)):
         fftTmp = signal[k:(k + len(window))]
-        fftTmp = multiply(fftTmp, window)
+        fftTmp *= window
         fftTmp = fft.fft(fftTmp, fm)[:int(fm / 2)]
         fftTmp = abs(fftTmp)
         if (len(fftRst) == 0):
@@ -227,44 +227,59 @@ def stft(signal, window, fm):
         else:
             for n in arange(0, len(fftTmp)):
                 fftRst[n] = fftRst[n] + fftTmp[n]
-        k += len(window)
+        k += int(len(window) - overlap)
     return fftRst
 
 def graficarDienteDeSierra():
-    fm = 10_000
+    fm = 20_000
     f0 = 138
     t = linspace(0,1,fm)
     dientes = sawtooth(2*pi*f0*t)
     tv = int((fm/f0))
     param = 2
+    figureLabel = ""
     if(param == 0):
-        window = boxcar(2*tv)
+        window = boxcar(int(2*tv))
+        overlap = 0
+        figureLabel = "Diente de Sierra-Window=Boxcar"
     if(param == 1):
-        window = get_window("hann", 4*tv)
+        window = get_window("hann", 8*tv)
+        overlap = int(len(window)/2)
+        figureLabel = "Diente de Sierra- Window=Hann"
     if(param == 2):
-        window = get_window("hamming", 4*tv)
+        window = get_window("hamming", 8*tv)
+        overlap = int(len(window) / 2)
+        figureLabel = "Diente de Sierra-Window=Hamming"
 
-    fftRst = stft(dientes, window, fm)
+    fftRst = stft(dientes, window, fm, overlap)
     fftRst /= np.max(fftRst) #normalizar la señal
     print(f"f_0={fftRst[138]}, 2f_0={fftRst[276]}, 3f_0={fftRst[414]}, 4f_0={fftRst[552]}")
+    figure(figureLabel)
     plot(fftRst)
+    xlabel("Freq (Hz)")
+    ylabel("Magnitude")
     show()
+    return 0
 
 def graficar_A_STFT():
-    (fm,s,n)=getFileValues('T1/Muestras/1/am1.wav')
-    f0 = 211
+    (fm,s,n)=getFileValues('T1/Muestras/1/af1.wav')
+    f0 = 210
     t = arange(n)*(1/fm)*1000
     tv = int(fm/f0)
-    window = get_window("boxcar", 2*tv)
-    fftRst = stft(s, window, fm)
+    window = get_window("hamming", 4*tv)
+    fftRst = stft(s, window, fm,int(len(window)/4))
     fftRst /= np.max(fftRst) #normalizar la señal
-    print(f"f_0={fftRst[138]}, 2f_0={fftRst[276]}, 3f_0={fftRst[414]}, 4f_0={fftRst[552]}")
+    print(f"f_0={fftRst[f0]}, 2f_0={fftRst[f0*2]}, 3f_0={fftRst[f0*3]}, 4f_0={fftRst[f0*4]}")
+    figureLabel = "Masculino"
+    figure(figureLabel)
     plot(fftRst)
+    xlabel("Freq (Hz)")
+    ylabel("Magnitude")
     show()
+    return 0
 
-
+graficarDienteDeSierra()
 graficar_A_STFT()
-#graficarDienteDeSierra()
 
 
 
