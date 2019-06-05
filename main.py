@@ -1,7 +1,7 @@
 from scipy.io.wavfile import read, write
 from scipy.signal import lfilter, resample, butter, sawtooth, boxcar, get_window, stft
 from matplotlib.mlab import specgram
-from numpy import iinfo, arange, reshape, interp, linspace, cos, log2, sqrt, zeros, pi, append, float32, fft, roll, multiply, sinc
+from numpy import iinfo, arange, reshape, interp, linspace, cos, log2, sqrt, zeros, pi, append, float32, fft, roll, multiply, sinc, ceil
 from matplotlib.pyplot import figure, plot, show, xlabel, ylabel, xlim, ylim, magnitude_spectrum
 import numpy as np
 
@@ -239,18 +239,18 @@ def graficarDienteDeSierra():
     param = 2
     figureLabel = ""
     if(param == 0):
-        window = boxcar(int(2*tv))
+        window = boxcar(int(2**(ceil(log2(2*tv)))))
         overlap = 0
         figureLabel = "Diente de Sierra-Window=Boxcar"
     if(param == 1):
-        window = get_window("hann", 8*tv)
+        window = get_window("hann", int(2**(ceil(log2(4*tv)))))
         overlap = int(len(window)/2)
-        figureLabel = "Diente de Sierra- Window=Hann"
+        figureLabel = "Diente de Sierra-Window=Hann"
     if(param == 2):
-        window = get_window("hamming", 8*tv)
+        window = get_window("hamming", int(2**(ceil(log2(4*tv)))))
         overlap = int(len(window) / 2)
         figureLabel = "Diente de Sierra-Window=Hamming"
-
+    print(len(window))
     fftRst = stft(dientes, window, fm, overlap)
     fftRst /= np.max(fftRst) #normalizar la señal
     print(f"f_0={fftRst[138]}, 2f_0={fftRst[276]}, 3f_0={fftRst[414]}, 4f_0={fftRst[552]}")
@@ -262,11 +262,11 @@ def graficarDienteDeSierra():
     return 0
 
 def graficar_A_STFT():
-    (fm,s,n)=getFileValues('T1/Muestras/1/af1.wav')
-    f0 = 210
+    (fm,s,n)=getFileValues('T1/Muestras/1/am1.wav')
+    f0 = 138
     t = arange(n)*(1/fm)*1000
     tv = int(fm/f0)
-    window = get_window("hamming", 4*tv)
+    window = get_window("boxcar", int(2**(ceil(log2(2*tv)))))
     fftRst = stft(s, window, fm,int(len(window)/4))
     fftRst /= np.max(fftRst) #normalizar la señal
     print(f"f_0={fftRst[f0]}, 2f_0={fftRst[f0*2]}, 3f_0={fftRst[f0*3]}, 4f_0={fftRst[f0*4]}")
@@ -278,7 +278,8 @@ def graficar_A_STFT():
     show()
     return 0
 
-graficarDienteDeSierra()
+#graficarDienteDeSierra()
+
 graficar_A_STFT()
 
 
